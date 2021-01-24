@@ -11,15 +11,14 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "rck",
-	Short: "repository check",
-	Long: `check all repos recursively from a given directory
-					for their up-to-dateness with origin`,
-	Args: cobra.MinimumNArgs(1),
+	Use:   "dck",
+	Short: "directory check",
+	Long: `will recursively search for all folders that have <string> in the name`,
+	Args: cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		dir, _ := filepath.Abs(args[0])
 
-		caps, err := CapList(dir)
+		caps, err := DirList(dir, args[1])
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -31,7 +30,7 @@ var rootCmd = &cobra.Command{
 	},
 }
 
-func CapList(dir string) ([]string, error) {
+func DirList(dir string, searchString string) ([]string, error) {
 	var list []string
 	permissionDenied := regexp.MustCompile(`permission denied`)
 
@@ -45,7 +44,7 @@ func CapList(dir string) ([]string, error) {
 			}
 
 			if info.IsDir() {
-				isCap, _ := IsCapture(path)
+				isCap, _ := IsMatch(path, searchString)
 				if isCap {
 					list = append(list, path)
 				}
@@ -55,8 +54,8 @@ func CapList(dir string) ([]string, error) {
 		return list, err
 }
 
-func IsCapture(dir string) (bool, error) {
-	isCapture := regexp.MustCompile(`capture`)
+func IsMatch(dir string, searchString string) (bool, error) {
+	isCapture := regexp.MustCompile(searchString)
 	return isCapture.MatchString(filepath.Base(dir)), nil
 }
 
